@@ -1,0 +1,286 @@
+/* 交互式登录页 · 样式
+ * 左侧四个几何角色（眼球跟随指针、随输入状态变表情），右侧表单。
+ * 造型与动作曲线移植自 animated-characters-login-page（Vue → 原生 JS）。
+ *
+ * 颜色全部走 :root 上的令牌，浅色深色各一套；想换配色只改令牌，不用翻下面的规则。
+ * 角色行为在 login.js，这里只放静态造型、入场动画与各表情之间的差异。
+ */
+
+:root{
+  --blue:#2563eb; --blue-soft:#eff6ff; --blue-line:#bfdbfe;
+  --green:#16a34a; --amber:#d97706; --red:#dc2626; --purple:#7c3aed; --teal:#0d9488;
+  --ink:#1e293b; --ink2:#475569; --ink3:#94a3b8;
+  --bg:#f6f8fb; --panel:#ffffff; --line:#e2e8f0; --hover:#f1f5f9;
+  --shadow:0 1px 3px rgba(15,23,42,.06), 0 8px 24px rgba(15,23,42,.05);
+}
+:root[data-theme="dark"]{
+  --blue:#60a5fa; --blue-soft:#172554; --blue-line:#1e3a8a;
+  --green:#4ade80; --amber:#fbbf24; --red:#f87171; --purple:#a78bfa; --teal:#2dd4bf;
+  --ink:#e2e8f0; --ink2:#a9b6c8; --ink3:#6b7a8f;
+  --bg:#0f172a; --panel:#1a2336; --line:#2b3852; --hover:#22304a;
+  --shadow:0 1px 3px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.28);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]):not([data-theme="dark"]){
+  
+    --blue:#60a5fa; --blue-soft:#172554; --blue-line:#1e3a8a;
+    --green:#4ade80; --amber:#fbbf24; --red:#f87171; --purple:#a78bfa; --teal:#2dd4bf;
+    --ink:#e2e8f0; --ink2:#a9b6c8; --ink3:#6b7a8f;
+    --bg:#0f172a; --panel:#1a2336; --line:#2b3852; --hover:#22304a;
+    --shadow:0 1px 3px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.28);
+  }
+}
+
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  font-family:"Microsoft YaHei","PingFang SC","Segoe UI",sans-serif;
+  background:var(--bg); color:var(--ink); font-size:15px; line-height:1.7;
+  -webkit-font-smoothing:antialiased;
+}
+.hidden{display:none !important}
+button,input,select{font-family:inherit;font-size:inherit;color:inherit}
+button{cursor:pointer;border:none;background:none}
+a{color:inherit;text-decoration:none}
+
+/* ============ 登录页：左侧角色舞台 + 右侧表单 ============ */
+.login{min-height:100vh;display:flex;background:var(--panel)}
+
+.login-stage{
+  position:relative;flex:1 1 56%;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,#9ca3af 0%,#6b7280 48%,#4b5563 100%);
+}
+/* 细网格纹理，大块灰面才不至于发死 */
+.login-stage::before{
+  content:"";position:absolute;inset:0;
+  background-image:
+    linear-gradient(rgba(255,255,255,.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.055) 1px, transparent 1px);
+  background-size:20px 20px;
+}
+.stage-foot{
+  position:absolute;left:34px;bottom:26px;z-index:3;
+  color:rgba(255,255,255,.6);font-size:12px;
+}
+
+/* 舞台沿用原项目的坐标系（400 高，角色横向占 0~450），整组等比缩放；
+   宽度取 450 而不是原项目的 550，右边不留空档，四个角色正好居中 */
+.stage{
+  position:relative;width:450px;height:400px;
+  transform:scale(var(--stage-scale,1.2));transform-origin:center center;
+}
+@media (max-height:920px){.stage{--stage-scale:1.02}}
+@media (max-width:1240px){.stage{--stage-scale:.92}}
+
+/* ============ 登录表单 ============ */
+.login-form{
+  flex:1 1 44%;display:flex;align-items:center;justify-content:center;
+  padding:40px 32px;background:var(--panel);
+}
+.login-form-inner{width:100%;max-width:420px}
+.login-title{font-size:30px;font-weight:800;color:var(--ink);line-height:1.3}
+.login-sub{font-size:14px;color:var(--ink3);margin:8px 0 32px}
+.field{display:block;margin-bottom:18px}
+.field > span{display:block;font-size:13px;font-weight:600;color:var(--ink2);margin-bottom:8px}
+.field input{
+  width:100%;height:48px;padding:0 14px;border:1.5px solid var(--line);
+  border-radius:8px;background:var(--panel);transition:border-color .15s, box-shadow .15s;
+}
+.field input::placeholder{color:var(--ink3)}
+.field input:focus{outline:none;border-color:#6366f1;box-shadow:0 0 0 3px rgba(99,102,241,.16)}
+.login-error{min-height:20px;font-size:13px;color:var(--red);margin:0 0 12px}
+.btn-primary{
+  width:100%;height:48px;border-radius:8px;font-size:15px;font-weight:700;letter-spacing:3px;
+  color:#fff;background:#111827;transition:background .15s, transform .12s;
+}
+.btn-primary:hover{background:#000}
+.btn-primary:active{transform:translateY(1px)}
+.btn-primary:disabled{opacity:.55;cursor:not-allowed}
+:root[data-theme="dark"] .btn-primary{background:#e2e8f0;color:#0f172a}
+:root[data-theme="dark"] .btn-primary:hover{background:#fff}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]):not([data-theme="dark"]) .btn-primary{background:#e2e8f0;color:#0f172a}
+}
+.shake{animation:shake .35s}
+@keyframes shake{
+  25%{transform:translateX(-7px)} 50%{transform:translateX(6px)}
+  75%{transform:translateX(-4px)} 100%{transform:translateX(0)}
+}
+
+@media (max-width:900px){
+  .login{flex-direction:column}
+  .login-stage{flex:none;height:410px}
+  .stage{transform:scale(.68);transform-origin:bottom center;margin-bottom:30px}
+  .login-form{flex:none;padding:32px 24px 56px}
+}
+
+/* ============ 登录页的四个角色 ============ */
+/* 造型、尺寸与动作曲线取自 animated-characters-login-page 原项目。
+   身体的 skew/translate、眼睛与嘴的坐标由 faces.js 写成行内样式，
+   这里只放静态造型、入场动画和各表情之间的差异。 */
+
+.character{
+  position:absolute;bottom:0;transform-origin:bottom center;
+  transition:all .7s cubic-bezier(.4,0,.2,1);will-change:transform;
+}
+.ch-purple{left:70px;width:180px;height:400px;background:#6C3FF5;z-index:1}
+.ch-black{left:240px;width:120px;height:310px;background:#2D2D2D;z-index:2}
+.ch-orange{left:0;width:240px;height:150px;background:#FF9B6B;border-radius:120px 120px 0 0;z-index:3}
+.ch-yellow{left:310px;width:140px;height:230px;background:#E8D754;border-radius:70px 70px 0 0;z-index:4}
+
+/* 入场：四个角色从不同方向弹进来，落位后由 .entered 关掉动画、交还给行内 transform */
+.ch-purple{animation:enter-purple 1.2s cubic-bezier(.34,1.56,.64,1) forwards}
+.ch-black{animation:enter-black 1s cubic-bezier(.34,1.56,.64,1) .2s backwards}
+.ch-orange{animation:enter-orange 1.1s cubic-bezier(.34,1.56,.64,1) .1s backwards}
+.ch-yellow{animation:enter-yellow 1s cubic-bezier(.34,1.56,.64,1) .3s backwards}
+.character.entered{animation:none}
+
+@keyframes enter-purple{
+  0%{transform:translateX(-150px) translateY(50px) rotate(-15deg) scale(.3);opacity:0}
+  60%{transform:translateX(10px) translateY(-10px) rotate(3deg) scale(1.05)}
+  100%{transform:translateX(0) translateY(0) rotate(0deg) scale(1);opacity:1}
+}
+@keyframes enter-black{
+  0%{transform:translateY(-100px) scale(.5);opacity:0}
+  70%{transform:translateY(10px) scale(1.08)}
+  100%{transform:translateY(0) scale(1);opacity:1}
+}
+@keyframes enter-orange{
+  0%{transform:translateX(-200px) translateY(80px) rotate(-25deg) scale(.2);opacity:0}
+  65%{transform:translateX(15px) translateY(-8px) rotate(5deg) scale(1.1)}
+  100%{transform:translateX(0) translateY(0) rotate(0deg) scale(1);opacity:1}
+}
+@keyframes enter-yellow{
+  0%{transform:translateX(200px) translateY(60px) rotate(20deg) scale(.3);opacity:0}
+  65%{transform:translateX(-12px) translateY(-5px) rotate(-4deg) scale(1.06)}
+  100%{transform:translateX(0) translateY(0) rotate(0deg) scale(1);opacity:1}
+}
+
+/* 眼睛整组的坐标由 JS 给，过渡时长决定「转头」的快慢：
+   高个子慢（0.7s，动作大），前排两个快（0.2s，更机灵） */
+.eyes{position:absolute;display:flex;transition:all .7s cubic-bezier(.4,0,.2,1);will-change:left,top}
+.ch-purple .eyes{gap:32px}
+.ch-black .eyes{gap:24px}
+.ch-orange .eyes{gap:32px;transition:all .2s cubic-bezier(0,0,.2,1)}
+.ch-yellow .eyes{gap:24px;transition:all .2s cubic-bezier(0,0,.2,1)}
+
+/* 紫色与黑色有眼白，橙色与黄色只有一颗瞳孔 */
+.eyeball{
+  flex:none;background:#fff;border-radius:50%;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .3s cubic-bezier(.4,0,.2,1);will-change:height,border-radius,transform;
+}
+.ch-purple .eyeball{width:18px;height:18px}
+.ch-black .eyeball{width:16px;height:16px}
+.eyeball .pupil{
+  flex:none;border-radius:50%;background:#2D2D2D;
+  transition:transform .1s ease-out, opacity .12s;will-change:transform;
+}
+.ch-purple .eyeball .pupil{width:7px;height:7px}
+.ch-black .eyeball .pupil{width:6px;height:6px}
+.dot{
+  flex:none;width:12px;height:12px;border-radius:50%;background:#2D2D2D;
+  transition:transform .1s ease-out, height .15s ease-out;will-change:transform,height;
+}
+
+/* 眨眼：眼白压成一条线、瞳孔藏起来；只有瞳孔的角色直接压扁。
+   闭眼单独给 0.1s——沿用眼白默认的 0.3s 的话，150ms 的眨眼只能压到四分之一，看不出在眨 */
+.eyeball.blink{height:2px;transition:height .1s ease-out}
+.eyeball.blink .pupil{opacity:0}
+.dot.blink{height:2px}
+
+/* 登录失败时黑色的眼睛垮成八字 */
+.ch-black .eyeball.sad{height:8px;border-radius:0 0 16px 16px}
+.ch-black .eyes .eyeball.sad:first-child{transform:rotate(-20deg)}
+.ch-black .eyes .eyeball.sad:last-child{transform:rotate(20deg)}
+
+/* 嘴：常态是下半圆（微微笑），打字时抽成竖条，失败翻过来，成功张大 */
+.mouth{position:absolute;background:#2D2D2D}
+.purple-mouth{
+  width:24px;height:8px;border-radius:0 0 12px 12px;
+  transition:left .7s cubic-bezier(.4,0,.2,1), top .7s cubic-bezier(.4,0,.2,1),
+    width .5s cubic-bezier(.4,0,.2,1), height .5s cubic-bezier(.4,0,.2,1),
+    border-radius .5s cubic-bezier(.4,0,.2,1), transform .5s cubic-bezier(.4,0,.2,1);
+}
+.purple-mouth.typing{
+  width:7px;height:32px;border-radius:0;
+  transform:translateX(13.5px) translateY(-28px) var(--counter-skew,skewX(0deg));
+}
+.purple-mouth.sad{width:24px;height:8px;border-radius:12px 12px 0 0}
+.purple-mouth.happy{width:30px;height:16px;border-radius:0 0 15px 15px}
+
+.orange-mouth{
+  width:26px;height:13px;border-radius:0 0 13px 13px;
+  transition:left .2s cubic-bezier(0,0,.2,1), top .2s cubic-bezier(0,0,.2,1),
+    width .5s cubic-bezier(.4,0,.2,1), height .5s cubic-bezier(.4,0,.2,1),
+    border-radius .5s cubic-bezier(.4,0,.2,1), transform .5s cubic-bezier(.4,0,.2,1);
+}
+.orange-mouth.typing{width:14px;height:14px;border-radius:50%;transform:translateX(6px)}
+.orange-mouth.sad{width:26px;height:13px;border-radius:13px 13px 0 0}
+.orange-mouth.happy{width:32px;height:18px;border-radius:0 0 16px 16px}
+
+/* 黄色的嘴是一条线，失败画成波浪、成功弯成笑 */
+.yellow-mouth{position:absolute;transition:all .2s cubic-bezier(0,0,.2,1)}
+.yellow-mouth svg{display:block}
+.yellow-mouth-path{
+  d:path('M0 10 Q10 10, 20 10 Q30 10, 40 10 Q50 10, 60 10 Q70 10, 80 10');
+  transition:d .5s cubic-bezier(.4,0,.2,1);
+}
+.yellow-mouth-path.wavy{d:path('M0 10 Q10 2, 20 10 Q30 18, 40 10 Q50 2, 60 10 Q70 18, 80 10')}
+.yellow-mouth-path.happy{d:path('M0 2 Q10 10, 20 14 Q30 18, 40 18 Q50 18, 60 14 Q70 10, 80 2')}
+
+/* 撒花 */
+.confetti-layer{position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:80}
+.confetti-layer i{position:absolute;border-radius:2px;animation:confetti-fall linear forwards}
+@keyframes confetti-fall{
+  0%{translate:0 0;opacity:1}
+  100%{translate:30px 200vh;opacity:1;rotate:720deg}
+}
+
+
+/* ============ 登录表单的点缀 ============ */
+.login-form{position:relative}
+/* 右上角一抹淡色，纯白面太素 */
+.login-form::before{
+  content:"";position:absolute;right:0;top:0;width:340px;height:340px;pointer-events:none;
+  background:radial-gradient(circle at 78% 18%, rgba(109,63,245,.10), transparent 62%);
+}
+.login-form-inner{position:relative}
+
+.input-wrap{position:relative;display:block}
+.input-icon{
+  position:absolute;left:13px;top:50%;transform:translateY(-50%);
+  font-size:14px;opacity:.45;pointer-events:none;
+}
+.input-wrap input{padding-left:40px}
+.pw-wrap input{padding-right:44px}
+
+.form-hints{
+  display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:22px;
+  font-size:12px;color:var(--ink3);
+}
+.form-foot{
+  margin-top:26px;padding-top:18px;border-top:1px solid var(--line);
+  font-size:12px;color:var(--ink3);
+}
+
+/* ============ 淡入淡出 ============ */
+/* 登录成功后不硬切：先让彩纸落一会儿，再整页淡出交给下一屏 */
+#login{transition:opacity .4s ease}
+#login.fading{opacity:0}
+
+/* ============ 密码显示开关 ============ */
+.pw-wrap{position:relative;display:block}
+.pw-wrap input{padding-right:44px}
+.pw-toggle{
+  position:absolute;right:7px;top:50%;transform:translateY(-50%);
+  width:32px;height:32px;border-radius:8px;font-size:15px;opacity:.5;line-height:1;
+  transition:opacity .15s, background .15s;
+}
+.pw-toggle:hover{background:var(--hover);opacity:.9}
+.pw-toggle.on{opacity:1}
+
+@media (prefers-reduced-motion: reduce){
+  .character{animation:none}
+  .confetti-layer{display:none}
+}

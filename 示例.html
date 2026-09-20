@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="auto">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=980">
+<title>交互式登录页 · 示例</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔐</text></svg>">
+<link rel="stylesheet" href="login.css">
+<style>
+  /* 只属于这个示例：登录成功后露出来的那一屏，复用时删掉 */
+  .demo-done{
+    min-height:100vh;display:flex;align-items:center;justify-content:center;
+    flex-direction:column;gap:14px;text-align:center;padding:40px;
+  }
+  .demo-done h1{font-size:26px;font-weight:800}
+  .demo-done p{color:var(--ink3);font-size:14px;max-width:460px;line-height:1.9}
+  .demo-done button{
+    height:38px;padding:0 18px;border-radius:9px;border:1px solid var(--line);
+    background:var(--panel);color:var(--ink2);font-size:14px;
+  }
+  .demo-done button:hover{background:var(--hover);color:var(--ink)}
+  .demo-hint{
+    position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:70;
+    background:rgba(17,24,39,.86);color:#fff;font-size:12.5px;line-height:1.8;
+    padding:8px 16px;border-radius:10px;pointer-events:none;
+  }
+  .demo-hint b{color:#fbbf24}
+</style>
+</head>
+<body>
+
+<!-- ============ 从这里开始是可复用的部分 ============ -->
+<div id="login" class="login hidden">
+
+  <!-- 左：角色舞台。四个几何角色，眼球跟随指针，表情随输入状态切换 -->
+  <div class="login-stage">
+
+    <div class="stage" id="stage">
+
+      <!-- 紫色 · 最高的方块，站最后排 -->
+      <div class="character ch-purple" data-char="purple">
+        <div class="eyes">
+          <div class="eyeball"><i class="pupil"></i></div>
+          <div class="eyeball"><i class="pupil"></i></div>
+        </div>
+        <div class="mouth purple-mouth"></div>
+      </div>
+
+      <!-- 墨黑 · 直角方块 -->
+      <div class="character ch-black" data-char="black">
+        <div class="eyes">
+          <div class="eyeball"><i class="pupil"></i></div>
+          <div class="eyeball"><i class="pupil"></i></div>
+        </div>
+      </div>
+
+      <!-- 橙色 · 半圆 -->
+      <div class="character ch-orange" data-char="orange">
+        <div class="eyes"><i class="dot"></i><i class="dot"></i></div>
+        <div class="mouth orange-mouth"></div>
+      </div>
+
+      <!-- 黄色 · 圆顶方块，站最前面 -->
+      <div class="character ch-yellow" data-char="yellow">
+        <div class="eyes"><i class="dot"></i><i class="dot"></i></div>
+        <div class="yellow-mouth">
+          <svg width="80" height="20" viewBox="0 0 80 20" aria-hidden="true">
+            <path class="yellow-mouth-path" d="M0 10 Q10 10, 20 10 Q30 10, 40 10 Q50 10, 60 10 Q70 10, 80 10"
+                  stroke="#2D2D2D" stroke-width="3" fill="none" stroke-linecap="round"></path>
+          </svg>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- 右：表单 -->
+  <div class="login-form">
+    <div class="login-form-inner">
+      <h1 class="login-title">欢迎回来</h1>
+      <p class="login-sub">登录后继续</p>
+
+      <form id="login-form" autocomplete="off">
+        <label class="field">
+          <span>账号</span>
+          <span class="input-wrap">
+            <span class="input-icon">👤</span>
+            <input id="username" type="text" autocomplete="username" spellcheck="false" placeholder="请输入账号" required>
+          </span>
+        </label>
+        <label class="field">
+          <span>密码</span>
+          <span class="input-wrap pw-wrap">
+            <span class="input-icon">🔒</span>
+            <input id="password" type="password" autocomplete="current-password" placeholder="请输入密码" required>
+            <button id="pw-toggle" type="button" class="pw-toggle" title="显示密码" aria-label="显示密码">👁</button>
+          </span>
+        </label>
+        <p id="login-error" class="login-error"></p>
+        <button id="login-btn" type="submit" class="btn-primary">登 录 →</button>
+      </form>
+
+      <div class="form-hints">
+        <span>🕒 登录状态保留 30 天</span>
+      </div>
+
+    </div>
+  </div>
+</div>
+<!-- ============ 可复用部分到此为止 ============ -->
+
+<!-- 下面是示例自己的东西，复用时删掉 -->
+<div class="demo-done hidden" id="demo-done">
+  <h1>登录成功 🎉</h1>
+  <p>这一屏代表你自己的主界面。真实项目里在 <code>onDone</code> 里把它显示出来即可。</p>
+  <button id="demo-again">回到登录页再看一遍</button>
+</div>
+
+<div class="demo-hint" id="demo-hint">
+  示例账号 <b>yugui</b> / 密码 <b>123456</b>　·　故意输错可以看失败时的表情
+</div>
+
+<script src="login.js"></script>
+<script>
+// ============ 示例的接线，真实项目把 onSubmit 换成你自己的请求 ============
+Login.init({
+  onSubmit: function (user, pass) {
+    // 这里演示一个假的校验；真实项目里换成 fetch('/api/login', ...) 并返回它的 Promise
+    return new Promise(function (resolve) {
+      setTimeout(function () {
+        if (user === 'yugui' && pass === '123456') resolve(true);
+        else resolve({ ok: false, message: '账号或密码不正确' });
+      }, 600);   // 故意慢一拍，顺便演示按钮的禁用态
+    });
+  },
+  onDone: function () {
+    document.getElementById('demo-done').classList.remove('hidden');
+    document.getElementById('demo-hint').classList.add('hidden');
+  }
+});
+
+document.getElementById('demo-again').addEventListener('click', function () {
+  document.getElementById('demo-done').classList.add('hidden');
+  document.getElementById('demo-hint').classList.remove('hidden');
+  Login.show();
+});
+</script>
+</body>
+</html>
